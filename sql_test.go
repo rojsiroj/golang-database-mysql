@@ -134,3 +134,22 @@ func TestQueryWithParameter(t *testing.T) {
 	}
 	defer rows.Close()
 }
+
+func TestExecSqlParameter(t *testing.T) {
+	db, _ := GetConnection()
+	defer db.Close()
+
+	ctx := context.Background()
+
+	username := "siroj'; DROP TABLE user; #"
+	password := "roj"
+
+	query := "INSERT INTO user(username, password) VALUES(?, ?)"
+	_, err := db.ExecContext(ctx, query, username, password)
+
+	if err != nil {
+		assert.Fail(t, "Failed to insert data", err)
+	}
+
+	fmt.Println("Success insert new data")
+}
