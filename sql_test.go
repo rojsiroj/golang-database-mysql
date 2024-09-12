@@ -153,3 +153,28 @@ func TestExecSqlParameter(t *testing.T) {
 
 	fmt.Println("Success insert new data")
 }
+
+func TestAutoIncrement(t *testing.T) {
+	db, _ := GetConnection()
+	defer db.Close()
+
+	ctx := context.Background()
+
+	email := "siroj@hyperscal"
+	comment := "Test Comment"
+
+	query := "INSERT INTO comments(email, comment) VALUES(?, ?)"
+	result, err := db.ExecContext(ctx, query, email, comment)
+
+	if err != nil {
+		assert.Fail(t, "Failed to insert data", err)
+	}
+
+	insertId, err := result.LastInsertId()
+
+	if err != nil {
+		assert.Fail(t, "Failed to insert data", err)
+	}
+
+	fmt.Println("Success insert new data with id: ", insertId)
+}
