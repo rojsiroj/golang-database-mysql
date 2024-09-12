@@ -8,7 +8,7 @@ import (
 )
 
 func GetConnection() (*sql.DB, error) {
-	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/learning_golang")
+	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/learning_golang?parseTime=true")
 
 	if err != nil {
 		return nil, err
