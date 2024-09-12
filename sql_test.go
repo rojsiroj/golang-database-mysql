@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -177,4 +178,75 @@ func TestAutoIncrement(t *testing.T) {
 	}
 
 	fmt.Println("Success insert new data with id: ", insertId)
+}
+
+func TestPrepareStatement(t *testing.T) {
+	db, _ := GetConnection()
+	defer db.Close()
+
+	ctx := context.Background()
+	query := "INSERT INTO comments(email, comment) VALUES(?, ?)"
+	statement, err := db.PrepareContext(ctx, query) // prepare only use one connection, suitable for inserting large amounts of data
+	if err != nil {
+		assert.Fail(t, err.Error())
+	}
+	defer statement.Close()
+
+	for i := 0; i < 10; i++ {
+		email := "roj" + strconv.Itoa(i) + "gmail.com"
+		comment := "Komentar ke-" + strconv.Itoa(i)
+
+		result, err := statement.ExecContext(ctx, email, comment)
+
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
+
+		id, err := result.LastInsertId()
+
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
+
+		fmt.Println("Success insert new comment data with id: ", id)
+	}
+}
+
+func TestTransaction(t *testing.T) {
+	db, _ := GetConnection()
+	defer db.Close()
+
+	ctx := context.Background()
+
+	tx, err := db.Begin()
+	if err != nil {
+		assert.Fail(t, err.Error())
+	}
+
+	query := "INSERT INTO comments(email, comment) VALUES(?, ?)"
+
+	for i := 0; i < 10; i++ {
+		email := "roj" + strconv.Itoa(i) + "gmail.com"
+		comment := "Komentar ke-" + strconv.Itoa(i)
+
+		result, err := tx.ExecContext(ctx, query, email, comment)
+
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
+
+		id, err := result.LastInsertId()
+
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
+
+		fmt.Println("Success insert new comment data with id: ", id)
+	}
+
+	err = tx.Commit()
+	// err = tx.Rollback()
+	if err != nil {
+		assert.Fail(t, err.Error())
+	}
 }
