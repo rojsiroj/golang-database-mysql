@@ -70,3 +70,36 @@ func TestQuerySql(t *testing.T) {
 	}
 	defer rows.Close()
 }
+
+func TestSqlInjection(t *testing.T) {
+
+	db, _ := GetConnection()
+	defer db.Close()
+
+	ctx := context.Background()
+	username := "admin'; #" //causing sql injection
+	password := "salah"
+
+	query := "SELECT username FROM user WHERE username = '" + username + "' AND password ='" + password + "' LIMIT 1"
+	fmt.Println(query) //SELECT username FROM user WHERE username = 'admin'; #' AND password ='salah' LIMIT 1
+	rows, err := db.QueryContext(ctx, query)
+
+	if err != nil {
+		assert.Fail(t, "Failed to get data", err)
+	}
+
+	fmt.Println("Success get data")
+
+	if rows.Next() {
+		var username string
+
+		err := rows.Scan(&username)
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
+		fmt.Println("Sukses login, with username: ", username)
+	} else {
+		fmt.Println("Gagal login")
+	}
+	defer rows.Close()
+}
